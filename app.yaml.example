@@ -1,0 +1,21 @@
+runtime: php55
+api_version: 1
+
+handlers:
+- url: /favicon.ico
+  static_files: vendor/sabre/dav/lib/DAV/Browser/assets/favicon.ico
+  upload: vendor/sabre/dav/lib/DAV/Browser/assets/favicon.ico
+  application_readable: true
+
+- url: /robots.txt
+  static_files: public/robots.txt
+  upload: public/robots.txt
+
+- url: /cron
+  script: public/cron.php
+  secure: always
+  login: admin
+
+- url: /.*
+  script: public/index.php
+  secure: always

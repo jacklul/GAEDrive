@@ -1,0 +1,4 @@
+cron:
+- description: Cron
+  url: /cron
+  schedule: every day 00:00

@@ -1,0 +1,35 @@
+{
+    "name": "jacklul/gaedrive",
+    "type": "project",
+    "description": "Use Google's App Engine platform as WebDAV storage",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Jack'lul",
+            "email": "jacklulcat@gmail.com",
+            "homepage": "https://jacklul.github.io",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": ">=5.5.9",
+        "ext-fileinfo": "*",
+        "ext-memcache": "*",
+        "google/cloud-datastore": "^1.5",
+        "monolog/monolog": "^1.23",
+        "pimple/pimple": "^3.2",
+        "sabre/dav": "^3.2|dev-3.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "GAEDrive\\": "src/"
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "optimize-autoloader": true,
+        "platform": {
+            "php": "5.5.34"
+        }
+    }
+}
