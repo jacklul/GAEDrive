@@ -16,7 +16,7 @@ class Directory extends Node implements Sabre\DAV\ICollection, Sabre\DAV\IQuota
     /**
      * @var bool
      */
-    private $paginated = false;
+    private $paginated;
 
     /**
      * @var int
@@ -123,9 +123,14 @@ class Directory extends Node implements Sabre\DAV\ICollection, Sabre\DAV\IQuota
      * @throws Sabre\DAV\Exception\Forbidden
      * @throws Sabre\DAV\Exception\NotFound
      * @throws Sabre\DAV\Exception\ServiceUnavailable
+     * @throws Sabre\DAV\Exception\NotImplemented
      */
     public function delete()
     {
+        if ($this->isPaginated()) {
+            throw new Sabre\DAV\Exception\NotImplemented('Directory contains more than ' . self::MAX_ENTRIES . ' entries and cannot be deleted in one operation! Remove all child elements first!');
+        }
+
         foreach ($this->getChildren() as $child) {
             $child->delete();
         }
@@ -142,6 +147,18 @@ class Directory extends Node implements Sabre\DAV\ICollection, Sabre\DAV\IQuota
     }
 
     /**
+     * @return FilesystemIterator
+     */
+    public function getDirectoryIterator()
+    {
+        return new FilesystemIterator(
+            $this->path,
+            FilesystemIterator::CURRENT_AS_SELF
+            | FilesystemIterator::SKIP_DOTS
+        );
+    }
+
+    /**
      * @return array|INode[]
      * @throws Sabre\DAV\Exception\Forbidden
      * @throws Sabre\DAV\Exception\NotFound
@@ -149,15 +166,12 @@ class Directory extends Node implements Sabre\DAV\ICollection, Sabre\DAV\IQuota
     public function getChildren()
     {
         $nodes = [];
-        $iterator = new FilesystemIterator(
-            $this->path,
-            FilesystemIterator::CURRENT_AS_SELF
-            | FilesystemIterator::SKIP_DOTS
-        );
+        $iterator = $this->getDirectoryIterator();
 
         $children_count = iterator_count($iterator);
         if ($children_count > self::MAX_ENTRIES) {
             $this->paginated = true;
+
             syslog(LOG_INFO, 'Directory contains more than ' . self::MAX_ENTRIES . ' entries!');
 
             $counter = 0;
@@ -240,6 +254,12 @@ class Directory extends Node implements Sabre\DAV\ICollection, Sabre\DAV\IQuota
      */
     public function isPaginated()
     {
+        if (is_bool($this->paginated)) {
+            return $this->paginated;
+        }
+
+        $this->paginated = iterator_count($this->getDirectoryIterator()) > self::MAX_ENTRIES;
+
         return $this->paginated;
     }
 
@@ -248,6 +268,6 @@ class Directory extends Node implements Sabre\DAV\ICollection, Sabre\DAV\IQuota
      */
     public function getPages()
     {
-        return $this->paginated ? $this->pages : null;
+        return $this->isPaginated() ? $this->pages : null;
     }
 }
