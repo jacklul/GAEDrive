@@ -57,6 +57,31 @@ class BrowserPlugin extends BaseBrowserPlugin
             return;
         }
 
+        if (method_exists($node, 'isPaginated') && $node->isPaginated()) {
+            $output .= '<h3>Big directory detected!</h3>';
+            $output .= '<b>Directory contains more than ' . Directory::MAX_ENTRIES . ' entries, only the first page is returned.<br/>You can use the following buttons to display more pages:</b><br/><br/>';
+
+            if (!isset($_GET['page']) || !is_numeric($_GET['page'])) {
+                $_GET['page'] = 1;
+            }
+
+            if ($_GET['page'] > 1) {
+                $previousPageNumber = $_GET['page'] - 1;
+                $nextPageNumber = $_GET['page'] + 1;
+            } else {
+                $previousPageNumber = null;
+                $nextPageNumber = $_GET['page'] + 1;
+            }
+
+            /** @noinspection PhpUndefinedMethodInspection */
+            if ($nextPageNumber > $node->getPages()) {
+                $nextPageNumber = null;
+            }
+
+            $previousPageNumber && $output .= '<form method="get" action=""><input type="hidden" name="page" value="' . $previousPageNumber . '" /><input type="submit" value="previous page" /></form><br/>';
+            $nextPageNumber && $output .= '<form method="get" action=""><input type="hidden" name="page" value="' . $nextPageNumber . '" /><input type="submit" value="next page" /></form><br/>';
+        }
+
         parent::htmlActionsPanel($node, $output, $path);
     }
 

@@ -10,6 +10,18 @@ use Sabre\HTTP\URLUtil;
 
 class Directory extends Node implements Sabre\DAV\ICollection, Sabre\DAV\IQuota
 {
+    const MAX_ENTRIES = 150;
+
+    /**
+     * @var bool
+     */
+    private $paginated = false;
+
+    /**
+     * @var int
+     */
+    private $pages;
+
     /**
      * @param string $name
      *
@@ -142,8 +154,42 @@ class Directory extends Node implements Sabre\DAV\ICollection, Sabre\DAV\IQuota
             | \FilesystemIterator::SKIP_DOTS
         );
 
+        $children_count = iterator_count($iterator);
+        if ($children_count > self::MAX_ENTRIES) {
+            $this->paginated = true;
+            syslog(LOG_INFO, 'Directory contains more than ' . self::MAX_ENTRIES . ' entries!');
+
+            $counter = 0;
+            $start = 0;
+            if (isset($_GET['page']) && is_numeric($_GET['page']) && $_GET['page'] > 0) {
+                $start = (self::MAX_ENTRIES * ($_GET['page'] - 1)) + 1;
+
+                if ($start === 1) {
+                    $start = 0;
+                }
+            }
+
+            $this->pages = round($children_count/self::MAX_ENTRIES);
+        }
+
         foreach ($iterator as $entry) {
-            $nodes[] = $this->getChild($entry->getFilename());
+            if ($this->paginated) {
+                /** @noinspection PhpUndefinedVariableInspection */
+                $counter++;
+
+                /** @noinspection PhpUndefinedVariableInspection */
+                if ($counter >= $start) {
+                    $nodes[] = $this->getChild($entry->getFilename());
+                } else {
+                    continue;
+                }
+
+                if ($counter >= $start + self::MAX_ENTRIES) {
+                    break;
+                }
+            } else {
+                $nodes[] = $this->getChild($entry->getFilename());
+            }
         }
 
         return $nodes;
@@ -186,5 +232,21 @@ class Directory extends Node implements Sabre\DAV\ICollection, Sabre\DAV\IQuota
         }
 
         return [0, Server::MAX_QUOTA];
+    }
+
+    /**
+     * @return bool
+     */
+    public function isPaginated()
+    {
+        return $this->paginated;
+    }
+
+    /**
+     * @return int
+     */
+    public function getPages()
+    {
+        return $this->paginated ? $this->pages : null;
     }
 }
