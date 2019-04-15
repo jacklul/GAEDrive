@@ -5,6 +5,7 @@ namespace GAEDrive\FS\Collection;
 use GAEDrive\FS\ACLDirectory;
 use GAEDrive\FS\Traits\ProtectedCollectionTrait;
 use GAEDrive\Plugin\PrincipalBackend\AbstractBackend as PrincipalBackend;
+use RuntimeException;
 use Sabre;
 use Sabre\DAVACL\ACLTrait;
 
@@ -28,8 +29,8 @@ class SharedColletion extends ACLDirectory implements Sabre\DAV\IProperties
     {
         $this->principalBackend = $principalBackend;
 
-        if (!is_dir($path)) {
-            mkdir($path, 0755, true);
+        if (!is_dir($path) && !mkdir($path, 0755, true) && !is_dir($path)) {
+            throw new RuntimeException(sprintf('Directory "%s" was not created', $path));
         }
 
         parent::__construct($path, null, $this->getACL());
@@ -41,10 +42,9 @@ class SharedColletion extends ACLDirectory implements Sabre\DAV\IProperties
      */
     public function getACL()
     {
-        if ($this->principalBackend instanceof PrincipalBackend && $this->principalBackend->getCurrentPrincipal() !== null) {
-            if ($this->principalBackend->isLimited()) {  // Hides this collection when user does not have access to it
-                return [];
-            }
+        // Hides this collection when user does not have access to it
+        if ($this->principalBackend instanceof PrincipalBackend && $this->principalBackend->getCurrentPrincipal() !== null && $this->principalBackend->isLimited()) {
+            return [];
         }
 
         return [

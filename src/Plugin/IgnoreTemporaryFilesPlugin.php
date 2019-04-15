@@ -85,8 +85,6 @@ class IgnoreTemporaryFilesPlugin extends ServerPlugin
 
                 return false;
         }
-
-        return;
     }
 
     /**
@@ -120,7 +118,5 @@ class IgnoreTemporaryFilesPlugin extends ServerPlugin
         if ($this->isTempFile($uri)) {
             return false;
         }
-
-        return;
     }
 }

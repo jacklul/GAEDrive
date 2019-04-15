@@ -22,7 +22,7 @@ class QuotaFile extends VirtualFile
     /**
      * @return int
      */
-    function getSize()
+    public function getSize()
     {
         return strlen($this->get());
     }
@@ -30,7 +30,7 @@ class QuotaFile extends VirtualFile
     /**
      * @return mixed
      */
-    function get()
+    public function get()
     {
         if ($this->contents !== null) {
             return $this->contents;
@@ -45,14 +45,14 @@ class QuotaFile extends VirtualFile
             'Used: ' . $quota[0] . ' bytes' . PHP_EOL .
             'Available: ' . $quota[1] . ' bytes' . PHP_EOL .
             'Total: ' . ($quota[0] + $quota[1]) . ' bytes' . PHP_EOL .
-            (isset($quota[3]) && isset($quota[4]) ? PHP_EOL . 'Files: ' . $quota[3] . PHP_EOL . 'Directories: ' . $quota[4] . PHP_EOL : '') .
+            (isset($quota[3], $quota[4]) ? PHP_EOL . 'Files: ' . $quota[3] . PHP_EOL . 'Directories: ' . $quota[4] . PHP_EOL : '') .
             (isset($quota[2]) ? PHP_EOL . 'Calculated at ' . date('l, d F Y H:i:s T', $quota[2]) . PHP_EOL : '');
     }
 
     /**
      * @return string
      */
-    function getETag()
+    public function getETag()
     {
         return '"' . sha1($this->get()) . '"';
     }
@@ -66,7 +66,7 @@ class QuotaFile extends VirtualFile
             $this->get();
         }
 
-        preg_match("/Calculated at (.*)/", $this->contents, $matches);
+        preg_match('/Calculated at (.*)/', $this->contents, $matches);
         if (isset($matches[1])) {
             return strtotime($matches[1]);
         }

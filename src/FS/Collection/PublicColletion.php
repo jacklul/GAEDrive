@@ -2,11 +2,13 @@
 
 namespace GAEDrive\FS\Collection;
 
+use Sabre\DAV\Exception;
+
 class PublicColletion extends SharedColletion
 {
     /**
      * @return array
-     * @throws \Sabre\DAV\Exception
+     * @throws Exception
      */
     public function getACL()
     {

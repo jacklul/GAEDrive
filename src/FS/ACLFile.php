@@ -3,8 +3,9 @@
 namespace GAEDrive\FS;
 
 use Sabre\DAVACL\ACLTrait;
+use Sabre\DAVACL\IACL;
 
-class ACLFile extends File implements \Sabre\DAVACL\IACL
+class ACLFile extends File implements IACL
 {
     use AclTrait;
 

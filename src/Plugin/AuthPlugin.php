@@ -4,6 +4,8 @@ namespace GAEDrive\Plugin;
 
 use GAEDrive\Plugin\AuthBackend\DatastoreBasic;
 use Sabre\DAV\Auth\Plugin as BaseAuthPlugin;
+use Sabre\DAV\Exception\MethodNotAllowed;
+use Sabre\DAV\Exception\NotFound;
 
 /**
  * Makes it possible to run functions on first backend directly
@@ -31,10 +33,11 @@ class AuthPlugin extends BaseAuthPlugin
     }
 
     /**
-     * @return DatastoreBasic|null
+     * @return DatastoreBasic
      */
     protected function getFirstBackend()
     {
+        /** @noinspection LoopWhichDoesNotLoopInspection */
         foreach ($this->backends as $backend) {
             return $backend;
         }
@@ -47,7 +50,7 @@ class AuthPlugin extends BaseAuthPlugin
      * @param string|null $display_name
      *
      * @return string
-     * @throws \Sabre\DAV\Exception\MethodNotAllowed
+     * @throws MethodNotAllowed
      */
     public function createUser($username, $display_name = null)
     {
@@ -59,7 +62,7 @@ class AuthPlugin extends BaseAuthPlugin
      * @param array  $data
      *
      * @return string
-     * @throws \Sabre\DAV\Exception\NotFound
+     * @throws NotFound
      */
     public function updateUser($username, $data)
     {

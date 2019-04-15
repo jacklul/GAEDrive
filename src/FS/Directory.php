@@ -2,6 +2,7 @@
 
 namespace GAEDrive\FS;
 
+use FilesystemIterator;
 use GAEDrive\Helper\Memcache;
 use GAEDrive\Server;
 use Sabre;
@@ -60,7 +61,7 @@ class Directory extends Node implements Sabre\DAV\ICollection, Sabre\DAV\IQuota
     public function createFile($name, $data = null)
     {
         // We're not allowing dots
-        if ($name == '.' || $name == '..') {
+        if ($name === '.' || $name === '..') {
             throw new Sabre\DAV\Exception\Forbidden('Permission denied to . and ..');
         }
 
@@ -85,7 +86,7 @@ class Directory extends Node implements Sabre\DAV\ICollection, Sabre\DAV\IQuota
     public function createDirectory($name)
     {
         // We're not allowing dots
-        if ($name == '.' || $name == '..') {
+        if ($name === '.' || $name === '..') {
             throw new Sabre\DAV\Exception\Forbidden('Permission denied to . and ..');
         }
 
@@ -108,7 +109,7 @@ class Directory extends Node implements Sabre\DAV\ICollection, Sabre\DAV\IQuota
      */
     public function childExists($name)
     {
-        if ($name == '.' || $name == '..') {
+        if ($name === '.' || $name === '..') {
             throw new Sabre\DAV\Exception\Forbidden('Permission denied to . and ..');
         }
 
@@ -148,10 +149,10 @@ class Directory extends Node implements Sabre\DAV\ICollection, Sabre\DAV\IQuota
     public function getChildren()
     {
         $nodes = [];
-        $iterator = new \FilesystemIterator(
+        $iterator = new FilesystemIterator(
             $this->path,
-            \FilesystemIterator::CURRENT_AS_SELF
-            | \FilesystemIterator::SKIP_DOTS
+            FilesystemIterator::CURRENT_AS_SELF
+            | FilesystemIterator::SKIP_DOTS
         );
 
         $children_count = iterator_count($iterator);
@@ -210,15 +211,15 @@ class Directory extends Node implements Sabre\DAV\ICollection, Sabre\DAV\IQuota
             throw new Sabre\DAV\Exception\NotFound('File could not be located');
         }
 
-        if ($name == '.' || $name == '..') {
+        if ($name === '.' || $name === '..') {
             throw new Sabre\DAV\Exception\Forbidden('Permission denied to . and ..');
         }
 
         if (is_dir($path)) {
             return new self($path);
-        } else {
-            return new File($path);
         }
+
+        return new File($path);
     }
 
     /**

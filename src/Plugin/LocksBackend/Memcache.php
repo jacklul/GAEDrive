@@ -3,6 +3,7 @@
 namespace GAEDrive\Plugin\LocksBackend;
 
 use Memcache as NativeMemcache;
+use RuntimeException;
 use Sabre\DAV\Locks\Backend\AbstractBackend;
 use Sabre\DAV\Locks\LockInfo;
 
@@ -38,14 +39,16 @@ class Memcache extends AbstractBackend
         foreach ($locks as $lock) {
             if (
                 $lock->uri === $uri ||
-                ($lock->depth != 0 && strpos($uri, $lock->uri . '/') === 0) ||
+                ($lock->depth !== 0 && strpos($uri, $lock->uri . '/') === 0) ||
                 ($returnChildLocks && (strpos($lock->uri, $uri . '/') === 0))) {
                 $newLocks[] = $lock;
             }
         }
 
         foreach ($newLocks as $k => $lock) {
-            if (time() > $lock->timeout + $lock->created) unset($newLocks[$k]);
+            if (time() > $lock->timeout + $lock->created) {
+                unset($newLocks[$k]);
+            }
         }
 
         return $newLocks;
@@ -85,7 +88,7 @@ class Memcache extends AbstractBackend
             $locks = $this->getData();
             foreach ($locks as $k => $lock) {
                 if (
-                    ($lock->token == $lockInfo->token) ||
+                    ($lock->token === $lockInfo->token) ||
                     (time() > $lock->timeout + $lock->created)
                 ) {
                     unset($locks[$k]);
@@ -120,7 +123,7 @@ class Memcache extends AbstractBackend
             }
 
             if ($start + $max_wait_time < time()) {
-                throw new \RuntimeException('Failed to acquire index lock');
+                throw new RuntimeException('Failed to acquire index lock');
             }
         } while ($lock !== false);
 
@@ -156,7 +159,7 @@ class Memcache extends AbstractBackend
         if ($this->writeLock()) {
             $locks = $this->getData();
             foreach ($locks as $k => $lock) {
-                if ($lock->token == $lockInfo->token) {
+                if ($lock->token === $lockInfo->token) {
                     unset($locks[$k]);
                     $this->putData($locks);
                     $this->releaseLock();

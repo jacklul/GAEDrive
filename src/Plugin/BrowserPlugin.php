@@ -5,7 +5,10 @@ namespace GAEDrive\Plugin;
 use GAEDrive\FS\Collection\HomeCollection;
 use GAEDrive\FS\Collection\RootCollection;
 use GAEDrive\FS\Collection\RootPrincipalCollection;
+use GAEDrive\FS\Directory;
 use Sabre\DAV\Browser\Plugin as BaseBrowserPlugin;
+use Sabre\DAV\Exception\Conflict;
+use Sabre\DAV\Exception\NotFound;
 use Sabre\Dav\INode;
 use Sabre\DAVACL\PrincipalCollection as BasePrincipalCollection;
 use Sabre\HTTP\RequestInterface;
@@ -90,7 +93,7 @@ class BrowserPlugin extends BaseBrowserPlugin
      * @param ResponseInterface $response
      *
      * @return bool
-     * @throws \Sabre\DAV\Exception\Conflict
+     * @throws Conflict
      */
     public function httpPOST(RequestInterface $request, ResponseInterface $response)
     {
@@ -98,19 +101,17 @@ class BrowserPlugin extends BaseBrowserPlugin
 
         // Fix file upload on GAE
         $postVars = $request->getPostData();
-        if ($postVars['sabreAction'] == 'put' && current($_FILES) === false) {
-            if ($_FILES) {
-                $file = reset($_FILES);
-                list(, $newName) = URLUtil::splitPath(trim($file['name']));
+        if ($_FILES && $postVars['sabreAction'] === 'put' && current($_FILES) === false) {
+            $file = reset($_FILES);
+            list(, $newName) = URLUtil::splitPath(trim($file['name']));
 
-                if (isset($postVars['name']) && trim($postVars['name'])) {
-                    $newName = trim($postVars['name']);
-                }
-                list(, $newName) = URLUtil::splitPath($newName);
+            if (isset($postVars['name']) && trim($postVars['name'])) {
+                $newName = trim($postVars['name']);
+            }
+            list(, $newName) = URLUtil::splitPath($newName);
 
-                if (is_uploaded_file($file['tmp_name'])) {
-                    $this->server->createFile($request->getPath() . '/' . $newName, fopen($file['tmp_name'], 'rb'));
-                }
+            if (is_uploaded_file($file['tmp_name'])) {
+                $this->server->createFile($request->getPath() . '/' . $newName, fopen($file['tmp_name'], 'rb'));
             }
         }
 
@@ -122,7 +123,7 @@ class BrowserPlugin extends BaseBrowserPlugin
      * @param ResponseInterface $response
      *
      * @return bool
-     * @throws \Sabre\DAV\Exception\NotFound
+     * @throws NotFound
      */
     public function httpGetEarly(RequestInterface $request, ResponseInterface $response)
     {
@@ -144,7 +145,7 @@ class BrowserPlugin extends BaseBrowserPlugin
     /**
      * @param string $assetName
      *
-     * @throws \Sabre\DAV\Exception\NotFound
+     * @throws NotFound
      */
     protected function serveAsset($assetName)
     {

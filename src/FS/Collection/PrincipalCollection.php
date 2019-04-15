@@ -17,7 +17,7 @@ class PrincipalCollection extends BasePrincipalCollection implements Sabre\DAV\I
      * @return Sabre\DAV\INode
      * @throws Sabre\DAV\Exception
      */
-    function getChildForPrincipal(array $principal)
+    public function getChildForPrincipal(array $principal)
     {
         return new Principal($this->principalBackend, $principal);
     }

@@ -5,6 +5,7 @@ namespace GAEDrive\FS\Collection;
 use GAEDrive\FS\HomeDirectory;
 use GAEDrive\FS\Traits\ProtectedPropertiesTrait;
 use GAEDrive\Plugin\PrincipalBackend\AbstractBackend;
+use RuntimeException;
 use Sabre;
 use Sabre\DAVACL\AbstractPrincipalCollection;
 use Sabre\DAVACL\ACLTrait;
@@ -91,10 +92,8 @@ class HomeCollection extends AbstractPrincipalCollection implements Sabre\DAVACL
 
         $children = [];
         foreach ($this->principalBackend->getPrincipalsByPrefix($this->principalPrefix) as $principalInfo) {
-            if (!$this->principalBackend->isGuest()) {
-                if (($currentPrincipal === $principalInfo['uri'] || $this->principalBackend->isAdministrator()) && !$this->principalBackend->isGuest($principalInfo['uri'])) {
-                    $children[] = $this->getChildForPrincipal($principalInfo);
-                }
+            if (!$this->principalBackend->isGuest() && ($currentPrincipal === $principalInfo['uri'] || $this->principalBackend->isAdministrator()) && !$this->principalBackend->isGuest($principalInfo['uri'])) {
+                $children[] = $this->getChildForPrincipal($principalInfo);
             }
         }
 
@@ -113,8 +112,8 @@ class HomeCollection extends AbstractPrincipalCollection implements Sabre\DAVACL
 
         $principalDataPath = $this->path . '/' . $principalBaseName;
 
-        if (!is_dir($principalDataPath)) {
-            mkdir($principalDataPath, 0755, true);
+        if (!is_dir($principalDataPath) && !mkdir($principalDataPath, 0755, true) && !is_dir($principalDataPath)) {
+            throw new RuntimeException(sprintf('Directory "%s" was not created', $principalDataPath));
         }
 
         return new HomeDirectory($this->path . '/' . $principalBaseName, $principalUri);

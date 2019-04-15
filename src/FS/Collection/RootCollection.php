@@ -2,7 +2,8 @@
 
 namespace GAEDrive\FS\Collection;
 
-use GAEDrive\Plugin\AuthPlugin as AuthPlugin;
+use Exception;
+use GAEDrive\Plugin\AuthPlugin;
 use Sabre;
 use Sabre\DAVACL\ACLTrait;
 
@@ -49,7 +50,7 @@ class RootCollection extends Sabre\DAV\SimpleCollection implements Sabre\DAVACL\
                                 $nodes[] = $node;
                             }
                         }
-                    } catch (\Exception $e) {
+                    } catch (Exception $e) {
                         // Do nothing
                     }
                 }

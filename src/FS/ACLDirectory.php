@@ -47,15 +47,15 @@ class ACLDirectory extends Directory implements Sabre\DAVACL\IACL
             throw new Sabre\DAV\Exception\NotFound('File could not be located');
         }
 
-        if ($name == '.' || $name == '..') {
+        if ($name === '.' || $name === '..') {
             throw new Sabre\DAV\Exception\Forbidden('Permission denied to . and ..');
         }
 
         if (is_dir($path)) {
             return new self($path, $this->owner, $this->acl);
-        } else {
-            return new ACLFile($path, $this->owner, $this->acl);
         }
+
+        return new ACLFile($path, $this->owner, $this->acl);
     }
 
     /**

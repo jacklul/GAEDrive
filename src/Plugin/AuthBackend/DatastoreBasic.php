@@ -3,6 +3,7 @@
 namespace GAEDrive\Plugin\AuthBackend;
 
 use Google\Cloud\Datastore\DatastoreClient;
+use Google\Cloud\Datastore\Entity;
 use Google\Cloud\Datastore\Key;
 use Memcache;
 use Sabre;
@@ -131,9 +132,10 @@ class DatastoreBasic extends AbstractBasic
 
             $users = [];
             if (iterator_count($result) > 0) {
-                /** @var \Google\Cloud\Datastore\Entity $entity */
+                /** @var Entity $entity */
                 foreach ($result as $entity) {
                     $entity_data = $entity->get();
+                    /** @noinspection NullPointerExceptionInspection */
                     $username = strtolower($entity->key()->pathEndIdentifier());
 
                     foreach ($entity_data as $key => $value) {

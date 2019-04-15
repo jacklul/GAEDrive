@@ -2,6 +2,7 @@
 
 namespace GAEDrive;
 
+use ErrorException;
 use GAEDrive\Helper\Memcache as MemcacheHelper;
 use Google\Auth\HttpHandler\Guzzle6HttpHandler;
 use Google\Cloud\Datastore\DatastoreClient;
@@ -12,8 +13,12 @@ use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\SyslogHandler;
 use Monolog\Logger;
 use Pimple\Container;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+use RuntimeException;
 use Sabre;
 use Sabre\DAV\Server as DAVServer;
+use SplFileInfo;
 
 /**
  * @property DAVServer       server
@@ -46,11 +51,11 @@ class Server
         } else {
             while (substr($this->path, -1) === '/') {
                 $this->path = substr($this->path, 0, -1);   // Remove ending slash
-            };
+            }
         }
 
         set_error_handler(
-            function ($type, $message, $file, $line) {
+            static function ($type, $message, $file, $line) {
                 switch ($type) {
                     case E_ERROR:
                     case E_PARSE:
@@ -58,7 +63,7 @@ class Server
                     case E_COMPILE_ERROR:
                     case E_USER_ERROR:
                     case E_RECOVERABLE_ERROR:
-                        throw new \ErrorException($message, 0, $type, $file, $line);
+                        throw new ErrorException($message, 0, $type, $file, $line);
                 }
             }
         );
@@ -115,10 +120,11 @@ class Server
             return $server;
         };
 
+
         /**
          * @return Logger
          */
-        $this->container['logger'] = function () {
+        $this->container['logger'] = static function () {
             $logger = new Logger('GAEDrive');
 
             $handler = new SyslogHandler('syslog');
@@ -131,9 +137,9 @@ class Server
         /**
          * @return DatastoreClient
          */
-        $this->container['datastore'] = function () {
+        $this->container['datastore'] = static function () {
             $options = [];
-            if (empty(getenv('GOOGLE_CLOUD_PROJECT')) && isset($_SERVER['DEFAULT_VERSION_HOSTNAME'])) {
+            if (isset($_SERVER['DEFAULT_VERSION_HOSTNAME']) && empty(getenv('GOOGLE_CLOUD_PROJECT'))) {
                 $options['projectId'] = explode('.', $_SERVER['DEFAULT_VERSION_HOSTNAME'])[0];
             }
 
@@ -154,7 +160,7 @@ class Server
         /**
          * @return Memcache
          */
-        $this->container['memcache'] = function () {
+        $this->container['memcache'] = static function () {
             $memcache = new Memcache();
             MemcacheHelper::init($memcache);
 
@@ -168,7 +174,7 @@ class Server
     public function run()
     {
         if (!$this->server instanceof DAVServer) {
-            throw new \RuntimeException('Server is not initialized');
+            throw new RuntimeException('Server is not initialized');
         }
 
         $this->server->start();
@@ -186,10 +192,12 @@ class Server
                 return;
             }
 
+            /** @noinspection SummerTimeUnsafeTimeManipulationInspection */
             $this->memcache->set('quota_forced_rescan', time(), 0, 3600 * 24);
             $type = 'periodic';
         } else {
             $this->memcache->delete('quota_rescan');
+            /** @noinspection SummerTimeUnsafeTimeManipulationInspection */
             $this->memcache->set('quota_forced_rescan', time(), 0, 3600 * 24);
             $type = 'rescan';
         }
@@ -204,12 +212,12 @@ class Server
 
         $stats = ['files' => 0, 'directories' => 0];
         foreach (
-            new \RecursiveIteratorIterator(
-                new \RecursiveDirectoryIterator($this->path, \RecursiveDirectoryIterator::SKIP_DOTS),
-                \RecursiveIteratorIterator::CHILD_FIRST
+            new RecursiveIteratorIterator(
+                new RecursiveDirectoryIterator($this->path, RecursiveDirectoryIterator::SKIP_DOTS),
+                RecursiveIteratorIterator::CHILD_FIRST
             ) as $file
         ) {
-            /** @var \SplFileInfo $file */
+            /** @var SplFileInfo $file */
             if ($file->isFile()) {
                 ++$stats['files'];
                 $used_quota += $file->getSize();
@@ -229,6 +237,8 @@ class Server
     }
 
     /**
+     * @noinspection MagicMethodsValidityInspection
+     *
      * @param string $key
      *
      * @return mixed|null

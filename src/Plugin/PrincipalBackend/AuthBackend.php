@@ -2,8 +2,9 @@
 
 namespace GAEDrive\Plugin\PrincipalBackend;
 
-use GAEDrive\Plugin\AuthPlugin as AuthPlugin;
+use GAEDrive\Plugin\AuthPlugin;
 use Sabre;
+use Sabre\DAV\Exception;
 use Sabre\DAV\MkCol;
 use Sabre\DAV\PropPatch;
 use Sabre\DAVACL\PrincipalBackend\CreatePrincipalSupport;
@@ -84,18 +85,16 @@ class AuthBackend extends AbstractBackend implements CreatePrincipalSupport
      */
     public function searchPrincipals($prefixPath, array $searchProperties, $test = 'test')
     {
-        if (count($searchProperties) == 0) {
+        if (count($searchProperties) === 0) {
             return [];
         }
 
         $properties = [];
         foreach ($searchProperties as $property => $value) {
-            switch ($property) {
-                case '{DAV:}displayname' :
-                    $properties[] = "name";
-                    break;
-                default :
-                    return [];
+            if ($property === '{DAV:}displayname') {
+                $properties[] = 'name';
+            } else {
+                return [];
             }
         }
 
@@ -104,7 +103,7 @@ class AuthBackend extends AbstractBackend implements CreatePrincipalSupport
         $matched_principals = [];
         foreach ($principals as $principal) {
             foreach ($properties as $property) {
-                if ($property === 'name' && strpos(strtolower($principal['uri']), strtolower($test)) !== false) {
+                if ($property === 'name' && stripos($principal['uri'], $test) !== false) {
                     $matched_principals[] = $principal['uri'];
                 }
             }
@@ -151,13 +150,13 @@ class AuthBackend extends AbstractBackend implements CreatePrincipalSupport
      * @param string $principal
      *
      * @return array
-     * @throws \Sabre\DAV\Exception
+     * @throws Exception
      */
     public function getGroupMemberSet($principal)
     {
-        $principal = $this->getPrincipalByPath($principal);
-        if (!$principal) {
-            throw new Sabre\DAV\Exception('Principal not found');
+        $principal_array = $this->getPrincipalByPath($principal);
+        if (!$principal_array) {
+            throw new Exception('Principal not found');
         }
 
         $principals = $this->getPrincipalsByPrefix(null);
@@ -167,7 +166,7 @@ class AuthBackend extends AbstractBackend implements CreatePrincipalSupport
             $user_groups = $this->getGroupMembership($this_principal['uri']);
 
             foreach ($user_groups as $group) {
-                if ($principal['uri'] === $group) {
+                if ($principal_array['uri'] === $group) {
                     $matched_users[] = $this_principal['uri'];
                 }
             }
@@ -198,20 +197,20 @@ class AuthBackend extends AbstractBackend implements CreatePrincipalSupport
      * @param string $principal
      *
      * @return array
-     * @throws \Sabre\DAV\Exception
+     * @throws Exception
      */
     public function getGroupMembership($principal)
     {
-        $principal = $this->getPrincipalByPath($principal);
-        if (!$principal) {
-            throw new Sabre\DAV\Exception('Principal not found');
+        $principal_array = $this->getPrincipalByPath($principal);
+        if (!$principal_array) {
+            throw new Exception('Principal not found');
         }
 
         $users = $this->authPlugin->getUsers();
 
         $groups = [];
         foreach ($users as $user => $data) {
-            if ($principal['uri'] === $this->principalPrefix . '/users/' . $user) {
+            if ($principal_array['uri'] === $this->principalPrefix . '/users/' . $user) {
                 if (isset($data['is_guest']) && $data['is_guest'] === true) {
                     $groups[] = $this->principalPrefix . '/groups/guests';
                 } elseif (isset($data['is_limited']) && $data['is_limited'] === true) {
@@ -268,7 +267,7 @@ class AuthBackend extends AbstractBackend implements CreatePrincipalSupport
         $propPatch->handle(array_keys($this->fieldMap), function ($properties) use ($path) {
             $values = [];
             foreach ($properties as $key => $value) {
-                if (isset($this->fieldMap[$key]['field']) && !empty($value)) {
+                if (!empty($value) && isset($this->fieldMap[$key]['field'])) {
                     $values[$this->fieldMap[$key]['field']] = $value;
                 }
             }
@@ -310,18 +309,15 @@ class AuthBackend extends AbstractBackend implements CreatePrincipalSupport
      * @param $principal
      *
      * @return bool
-     * @throws Sabre\DAV\Exception
+     * @throws Exception
      */
     public function isAdministrator($principal = null)
     {
         empty($principal) && $principal = $this->getCurrentPrincipal();
 
         $principal_data = $this->getPrincipalProperties($principal);
-        if (isset($principal_data['is_administrator']) && $principal_data['is_administrator'] === true) {
-            return true;
-        }
 
-        return false;
+        return isset($principal_data['is_administrator']) && $principal_data['is_administrator'] === true;
     }
 
     /**
@@ -329,16 +325,14 @@ class AuthBackend extends AbstractBackend implements CreatePrincipalSupport
      */
     public function getCurrentPrincipal()
     {
-        $currentPrincipal = $this->authPlugin->getCurrentPrincipal();
-
-        return $currentPrincipal;
+        return $this->authPlugin->getCurrentPrincipal();
     }
 
     /**
      * @param string $principal
      *
      * @return array
-     * @throws Sabre\DAV\Exception
+     * @throws Exception
      */
     private function getPrincipalProperties($principal)
     {
@@ -346,14 +340,14 @@ class AuthBackend extends AbstractBackend implements CreatePrincipalSupport
             return [];
         }
 
-        $principal = $this->getPrincipalByPath($principal);
-        if (!$principal) {
-            throw new Sabre\DAV\Exception('Principal not found');
+        $principal_array = $this->getPrincipalByPath($principal);
+        if (!$principal_array) {
+            throw new Exception('Principal not found');
         }
 
         $users = $this->authPlugin->getUsers();
         foreach ($users as $user => $data) {
-            if ($principal['uri'] === $this->principalPrefix . '/users/' . $user) {
+            if ($principal_array['uri'] === $this->principalPrefix . '/users/' . $user) {
                 return $data;
             }
         }
@@ -365,53 +359,44 @@ class AuthBackend extends AbstractBackend implements CreatePrincipalSupport
      * @param $principal
      *
      * @return bool
-     * @throws Sabre\DAV\Exception
+     * @throws Exception
      */
     public function isGuest($principal = null)
     {
         empty($principal) && $principal = $this->getCurrentPrincipal();
 
         $principal_data = $this->getPrincipalProperties($principal);
-        if (isset($principal_data['is_guest']) && $principal_data['is_guest'] === true) {
-            return true;
-        }
 
-        return false;
+        return isset($principal_data['is_guest']) && $principal_data['is_guest'] === true;
     }
 
     /**
      * @param $principal
      *
      * @return bool
-     * @throws Sabre\DAV\Exception
+     * @throws Exception
      */
     public function isLimited($principal = null)
     {
         empty($principal) && $principal = $this->getCurrentPrincipal();
 
         $principal_data = $this->getPrincipalProperties($principal);
-        if (isset($principal_data['is_limited']) && $principal_data['is_limited'] === true) {
-            return true;
-        }
 
-        return false;
+        return isset($principal_data['is_limited']) && $principal_data['is_limited'] === true;
     }
 
     /**
      * @param $principal
      *
      * @return bool
-     * @throws Sabre\DAV\Exception
+     * @throws Exception
      */
     public function isReadOnly($principal = null)
     {
         empty($principal) && $principal = $this->getCurrentPrincipal();
 
         $principal_data = $this->getPrincipalProperties($principal);
-        if (isset($principal_data['is_read_only']) && $principal_data['is_read_only'] === true) {
-            return true;
-        }
 
-        return false;
+        return isset($principal_data['is_read_only']) && $principal_data['is_read_only'] === true;
     }
 }

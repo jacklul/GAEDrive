@@ -2,6 +2,7 @@
 
 namespace GAEDrive\Plugin\PropertyStorageBackend;
 
+use FilesystemIterator;
 use Memcache as NativeMemcache;
 use Sabre\DAV\PropertyStorage\Backend\BackendInterface;
 use Sabre\DAV\PropFind;
@@ -118,10 +119,10 @@ class Memcache implements BackendInterface
         if ($this->root_path !== null) {
             // Attempt at updating child props...
             if (is_dir($this->root_path . '/' . $destination . '/')) {
-                $iterator = new \FilesystemIterator(
+                $iterator = new FilesystemIterator(
                     $this->root_path . '/' . $destination . '/',
-                    \FilesystemIterator::CURRENT_AS_SELF
-                    | \FilesystemIterator::SKIP_DOTS
+                    FilesystemIterator::CURRENT_AS_SELF
+                    | FilesystemIterator::SKIP_DOTS
                 );
 
                 foreach ($iterator as $node) {
@@ -135,10 +136,10 @@ class Memcache implements BackendInterface
                     }
                 }
             } elseif (is_dir($this->root_path . '/' . $source . '/')) {
-                $iterator = new \FilesystemIterator(
+                $iterator = new FilesystemIterator(
                     $this->root_path . '/' . $source . '/',
-                    \FilesystemIterator::CURRENT_AS_SELF
-                    | \FilesystemIterator::SKIP_DOTS
+                    FilesystemIterator::CURRENT_AS_SELF
+                    | FilesystemIterator::SKIP_DOTS
                 );
 
                 foreach ($iterator as $node) {
