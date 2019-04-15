@@ -81,6 +81,12 @@ class BrowserPlugin extends BaseBrowserPlugin
                 $nextPageNumber = null;
             }
 
+            /** @noinspection PhpUndefinedMethodInspection */
+            if ($previousPageNumber > $node->getPages()) {
+                /** @noinspection PhpUndefinedMethodInspection */
+                $previousPageNumber = $node->getPages();
+            }
+
             $previousPageNumber && $output .= '<form method="get" action=""><input type="hidden" name="page" value="' . $previousPageNumber . '" /><input type="submit" value="previous page" /></form><br/>';
             $nextPageNumber && $output .= '<form method="get" action=""><input type="hidden" name="page" value="' . $nextPageNumber . '" /><input type="submit" value="next page" /></form><br/>';
         }
