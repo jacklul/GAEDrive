@@ -1,7 +1,4 @@
-<?php /** @noinspection PhpDeprecationInspection */
-/** @noinspection PhpUnusedParameterInspection */
-/** @noinspection PhpIncompatibleReturnTypeInspection */
-/** @noinspection PhpInconsistentReturnPointsInspection */
+<?php
 
 namespace GAEDrive\Plugin;
 
@@ -67,7 +64,7 @@ class IgnoreTemporaryFilesPlugin extends ServerPlugin
      * @param RequestInterface  $request
      * @param ResponseInterface $response
      *
-     * @return bool
+     * @return bool|void
      */
     public function beforeMethod(RequestInterface $request, ResponseInterface $response)
     {
@@ -111,7 +108,7 @@ class IgnoreTemporaryFilesPlugin extends ServerPlugin
      * @param ICollection $parent
      * @param bool        $modified
      *
-     * @return bool
+     * @return bool|void
      */
     public function beforeCreateFile($uri, $data, ICollection $parent, $modified)
     {

@@ -22,7 +22,7 @@ class VirtualFile extends Sabre\DAV\SimpleFile implements Sabre\DAVACL\IACL, Sab
      * @param bool   $public
      * @param string $mimeType
      */
-    public function __construct($name, $contents, $public = false, $mimeType = 'text/plain')
+    public function __construct($name, $contents = '', $public = false, $mimeType = 'text/plain')
     {
         $this->public = $public;
 

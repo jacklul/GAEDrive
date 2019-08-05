@@ -3,6 +3,7 @@
 namespace GAEDrive\FS;
 
 use FilesystemIterator;
+use GAEDrive\FS\File\VirtualFile;
 use GAEDrive\Helper\Memcache;
 use GAEDrive\Server;
 use Sabre;
@@ -11,7 +12,7 @@ use Sabre\HTTP\URLUtil;
 
 class Directory extends Node implements Sabre\DAV\ICollection, Sabre\DAV\IQuota
 {
-    const MAX_ENTRIES = 150;
+    const MAX_ENTRIES = 100;
 
     /**
      * @var bool
@@ -183,6 +184,11 @@ class Directory extends Node implements Sabre\DAV\ICollection, Sabre\DAV\IQuota
             }
 
             $this->pages = round($children_count/self::MAX_ENTRIES);
+        }
+
+        if ($this->paginated && !in_array($_SERVER['REQUEST_METHOD'], ['GET', 'POST'])) {
+            $nodes[] = new VirtualFile('! TOO MANY FILES, ONLY THE FIRST ' . self::MAX_ENTRIES . ' ENTRIES ARE SHOWN');
+            $nodes[] = new VirtualFile('! VISIT WEB INTERFACE FOR PAGINATED LISTING');
         }
 
         foreach ($iterator as $entry) {
