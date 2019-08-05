@@ -36,7 +36,6 @@ class File extends Node implements Sabre\DAV\IFile
 
         clearstatcache(true, $this->path);
         Memcache::delete('meta:' . sha1($this->path));
-        Memcache::set('quota_rescan', time());
 
         return $this->getETag();
     }
@@ -82,7 +81,6 @@ class File extends Node implements Sabre\DAV\IFile
         }
 
         Memcache::delete('meta:' . sha1($this->path));
-        Memcache::set('quota_rescan', time());
 
         return true;
     }

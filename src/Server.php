@@ -13,12 +13,9 @@ use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\SyslogHandler;
 use Monolog\Logger;
 use Pimple\Container;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
 use RuntimeException;
 use Sabre;
 use Sabre\DAV\Server as DAVServer;
-use SplFileInfo;
 
 /**
  * @property DAVServer       server
@@ -104,7 +101,6 @@ class Server
                 new FS\Collection\HomeCollection($this->path . '/private', $principalBackend),
                 new FS\Collection\SharedColletion($this->path . '/shared', $principalBackend),
                 new FS\Collection\PublicColletion($this->path . '/public'),
-                new FS\File\QuotaFile('QUOTA.txt', true),
             ];
 
             $server = new Sabre\DAV\Server(new FS\Collection\RootCollection($rootCollection, $authPlugin, false));
@@ -180,61 +176,6 @@ class Server
         $this->server->start();
     }
 
-    /**
-     * @return void
-     */
-    public function cron()
-    {
-        $rescan = $this->memcache->get('quota_rescan');
-        if ($rescan === false) {
-            $forced_rescan = $this->memcache->get('quota_forced_rescan');
-            if ($forced_rescan !== false) {
-                return;
-            }
-
-            /** @noinspection SummerTimeUnsafeTimeManipulationInspection */
-            $this->memcache->set('quota_forced_rescan', time(), 0, 3600 * 24);
-            $type = 'periodic';
-        } else {
-            $this->memcache->delete('quota_rescan');
-            /** @noinspection SummerTimeUnsafeTimeManipulationInspection */
-            $this->memcache->set('quota_forced_rescan', time(), 0, 3600 * 24);
-            $type = 'rescan';
-        }
-
-        $this->logger->info('Scanning filesystem for quota calculation...', ['type' => $type]);
-
-        $used_quota = 0;
-        $max_quota = getenv('DATA_QUOTA');
-        if (empty($max_quota)) {
-            $max_quota = self::MAX_QUOTA;
-        }
-
-        $stats = ['files' => 0, 'directories' => 0];
-        foreach (
-            new RecursiveIteratorIterator(
-                new RecursiveDirectoryIterator($this->path, RecursiveDirectoryIterator::SKIP_DOTS),
-                RecursiveIteratorIterator::CHILD_FIRST
-            ) as $file
-        ) {
-            /** @var SplFileInfo $file */
-            if ($file->isFile()) {
-                ++$stats['files'];
-                $used_quota += $file->getSize();
-            } elseif ($file->isDir()) {
-                ++$stats['directories'];
-            }
-        }
-
-        if ($max_quota - $used_quota < 0) {
-            $max_quota = $used_quota;
-        }
-
-        $quota = [$used_quota, $max_quota - $used_quota, time(), $stats['files'], $stats['directories']];
-        $this->memcache->set('quota', $quota);
-
-        $this->logger->info('Quota set', ['used' => $quota[0], 'free' => $quota[1], 'max' => $max_quota]);
-    }
 
     /**
      * @noinspection MagicMethodsValidityInspection

@@ -2,8 +2,6 @@
 
 namespace GAEDrive\Plugin;
 
-use GAEDrive\Helper\Memcache;
-use GAEDrive\Server;
 use Sabre;
 use Sabre\DAV\INode;
 use Sabre\DAV\Node;
@@ -37,7 +35,7 @@ class QuotaCheckPlugin extends ServerPlugin
     {
         return [
             'name'        => $this->getPluginName(),
-            'description' => 'Denies creation and writing to files when they exceed the quota',
+            'description' => 'Denies creation and writing to files when they exceed file size limit',
             'link'        => 'https://github.com/owncloud/core/blob/master/apps/dav/lib/Connector/Sabre/QuotaPlugin.php',
         ];
     }
@@ -81,16 +79,8 @@ class QuotaCheckPlugin extends ServerPlugin
             $length = $this->getLength();
         }
 
-        if ($length) {
-            $freeSpace = $this->getFreeSpace($path);
-
-            if ($length > 32000000) {
-                throw new Sabre\DAV\Exception\InsufficientStorage('Max file size exceeded');
-            }
-
-            if ($length > $freeSpace) {
-                throw new Sabre\DAV\Exception\InsufficientStorage('Insufficient storage space');
-            }
+        if ($length && $length > 32000000) {
+            throw new Sabre\DAV\Exception\InsufficientStorage('Max file size exceeded');
         }
 
         return true;
@@ -115,21 +105,6 @@ class QuotaCheckPlugin extends ServerPlugin
         }
 
         return $length;
-    }
-
-    /**
-     * @param string $path
-     *
-     * @return int
-     */
-    public function getFreeSpace($path = null)
-    {
-        $quota = Memcache::get('quota');
-        if (is_array($quota)) {
-            return $quota[1];
-        }
-
-        return Server::MAX_QUOTA;
     }
 
     /**

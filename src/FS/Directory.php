@@ -72,7 +72,6 @@ class Directory extends Node implements Sabre\DAV\ICollection, Sabre\DAV\IQuota
         }
 
         clearstatcache(true, $newPath);
-        Memcache::set('quota_rescan', time());
 
         return '"' . sha1(filesize($newPath) . filemtime($newPath)) . '"';
     }
@@ -141,7 +140,6 @@ class Directory extends Node implements Sabre\DAV\ICollection, Sabre\DAV\IQuota
         }
 
         Memcache::delete('meta:' . sha1($this->path));
-        Memcache::set('quota_rescan', time());
 
         return true;
     }
@@ -241,11 +239,6 @@ class Directory extends Node implements Sabre\DAV\ICollection, Sabre\DAV\IQuota
      */
     public function getQuotaInfo()
     {
-        $quota = Memcache::get('quota');
-        if (is_array($quota)) {
-            return $quota;
-        }
-
         return [0, Server::MAX_QUOTA];
     }
 
