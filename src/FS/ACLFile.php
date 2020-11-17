@@ -7,7 +7,7 @@ use Sabre\DAVACL\IACL;
 
 class ACLFile extends File implements IACL
 {
-    use AclTrait;
+    use ACLTrait;
 
     /**
      * @var string
@@ -27,7 +27,7 @@ class ACLFile extends File implements IACL
     public function __construct($path, $owner, $acl = null)
     {
         $this->owner = $owner;
-        $this->acl = $acl;
+        $this->acl   = $acl;
 
         parent::__construct($path);
     }

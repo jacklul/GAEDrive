@@ -20,14 +20,14 @@ class IgnoreTemporaryFilesPlugin extends ServerPlugin
      * @var array
      */
     public $temporaryFilePatterns = [
-        '/^\._(.*)$/',             // OS/X resource forks
-        '/^.DS_Store$/',         // OS/X custom folder settings
-        '/^desktop.ini$/',         // Windows custom folder settings
-        '/^Thumbs.db$/',         // Windows thumbnail cache
-        '/^.(.*).swp$/',         // ViM temporary files
-        '/^\.dat(.*)$/',         // Smultron seems to create these
-        '/^~lock.(.*)#$/',         // Windows 7 lockfiles
-        '/^(.*)\.(tmp|temp)$/',  // Generic temporary files
+        '/^\._(.*)$/', // OS/X resource forks
+        '/^.DS_Store$/', // OS/X custom folder settings
+        '/^desktop.ini$/', // Windows custom folder settings
+        '/^Thumbs.db$/', // Windows thumbnail cache
+        '/^.(.*).swp$/', // ViM temporary files
+        '/^\.dat(.*)$/', // Smultron seems to create these
+        '/^~lock.(.*)#$/', // Windows 7 lockfiles
+        '/^(.*)\.(tmp|temp)$/', // Generic temporary files
     ];
 
     /**

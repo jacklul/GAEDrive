@@ -1,4 +1,4 @@
-<?php /** @noinspection PhpUnusedParameterInspection */
+<?php
 
 namespace GAEDrive\FS\Traits;
 

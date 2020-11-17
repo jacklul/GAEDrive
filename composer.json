@@ -18,7 +18,7 @@
         "google/cloud-datastore": "^1.5",
         "monolog/monolog": "^1.23",
         "pimple/pimple": "^3.2",
-        "sabre/dav": "^3.2|dev-3.3"
+        "sabre/dav": "^3.2"
     },
     "autoload": {
         "psr-4": {
@@ -26,10 +26,15 @@
         }
     },
     "config": {
+        "process-timeout": 0,
         "sort-packages": true,
-        "optimize-autoloader": true,
         "platform": {
             "php": "5.5.34"
-        }
+        },
+        "platform-check": false
+    },
+    "scripts": {
+        "prod": "composer install --no-ansi --no-dev --no-interaction --no-progress --no-scripts --optimize-autoloader",
+        "dev": "composer install --no-ansi --no-interaction --no-progress"
     }
 }

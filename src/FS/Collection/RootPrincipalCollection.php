@@ -5,8 +5,8 @@ namespace GAEDrive\FS\Collection;
 use GAEDrive\FS\Traits\ProtectedPropertiesTrait;
 use GAEDrive\Plugin\PrincipalBackend\AbstractBackend as PrincipalBackend;
 use Sabre;
-use Sabre\DAV\SimpleCollection;
 use Sabre\DAVACL\ACLTrait;
+use Sabre\DAV\SimpleCollection;
 
 class RootPrincipalCollection extends SimpleCollection implements Sabre\DAVACL\IACL, Sabre\DAV\IProperties
 {

@@ -37,7 +37,6 @@ class AuthPlugin extends BaseAuthPlugin
      */
     protected function getFirstBackend()
     {
-        /** @noinspection LoopWhichDoesNotLoopInspection */
         foreach ($this->backends as $backend) {
             return $backend;
         }

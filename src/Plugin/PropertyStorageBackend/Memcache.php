@@ -30,7 +30,7 @@ class Memcache implements BackendInterface
      */
     public function __construct(NativeMemcache $memcache, $root_path = null)
     {
-        $this->memcache = $memcache;
+        $this->memcache  = $memcache;
         $this->root_path = $root_path;
     }
 
@@ -78,10 +78,10 @@ class Memcache implements BackendInterface
                         $valueType = 1;
                     } elseif ($value instanceof Complex) {
                         $valueType = 2;
-                        $value = $value->getXml();
+                        $value     = $value->getXml();
                     } else {
                         $valueType = 3;
-                        $value = serialize($value);
+                        $value     = serialize($value);
                     }
 
                     $properties_new[] = [
@@ -122,7 +122,7 @@ class Memcache implements BackendInterface
                 $iterator = new FilesystemIterator(
                     $this->root_path . '/' . $destination . '/',
                     FilesystemIterator::CURRENT_AS_SELF
-                    | FilesystemIterator::SKIP_DOTS
+                     | FilesystemIterator::SKIP_DOTS
                 );
 
                 foreach ($iterator as $node) {
@@ -139,7 +139,7 @@ class Memcache implements BackendInterface
                 $iterator = new FilesystemIterator(
                     $this->root_path . '/' . $source . '/',
                     FilesystemIterator::CURRENT_AS_SELF
-                    | FilesystemIterator::SKIP_DOTS
+                     | FilesystemIterator::SKIP_DOTS
                 );
 
                 foreach ($iterator as $node) {

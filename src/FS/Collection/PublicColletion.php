@@ -12,7 +12,7 @@ class PublicColletion extends SharedColletion
      */
     public function getACL()
     {
-        $acl = parent::getACL();
+        $acl   = parent::getACL();
         $acl[] = [
             'privilege' => '{DAV:}read',
             'principal' => '{DAV:}unauthenticated',

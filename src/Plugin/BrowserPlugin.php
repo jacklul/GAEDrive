@@ -1,4 +1,4 @@
-<?php /** @noinspection PhpDeprecationInspection */
+<?php
 
 namespace GAEDrive\Plugin;
 
@@ -6,11 +6,11 @@ use GAEDrive\FS\Collection\HomeCollection;
 use GAEDrive\FS\Collection\RootCollection;
 use GAEDrive\FS\Collection\RootPrincipalCollection;
 use GAEDrive\FS\Directory;
+use Sabre\DAVACL\PrincipalCollection as BasePrincipalCollection;
 use Sabre\DAV\Browser\Plugin as BaseBrowserPlugin;
 use Sabre\DAV\Exception\Conflict;
 use Sabre\DAV\Exception\NotFound;
 use Sabre\Dav\INode;
-use Sabre\DAVACL\PrincipalCollection as BasePrincipalCollection;
 use Sabre\HTTP\RequestInterface;
 use Sabre\HTTP\ResponseInterface;
 use Sabre\HTTP\URLUtil;
@@ -70,20 +70,17 @@ class BrowserPlugin extends BaseBrowserPlugin
 
             if ($_GET['page'] > 1) {
                 $previousPageNumber = $_GET['page'] - 1;
-                $nextPageNumber = $_GET['page'] + 1;
+                $nextPageNumber     = $_GET['page'] + 1;
             } else {
                 $previousPageNumber = null;
-                $nextPageNumber = $_GET['page'] + 1;
+                $nextPageNumber     = $_GET['page'] + 1;
             }
 
-            /** @noinspection PhpUndefinedMethodInspection */
             if ($nextPageNumber > $node->getPages()) {
                 $nextPageNumber = null;
             }
 
-            /** @noinspection PhpUndefinedMethodInspection */
             if ($previousPageNumber > $node->getPages()) {
-                /** @noinspection PhpUndefinedMethodInspection */
                 $previousPageNumber = $node->getPages();
             }
 
@@ -108,7 +105,7 @@ class BrowserPlugin extends BaseBrowserPlugin
         // Fix file upload on GAE
         $postVars = $request->getPostData();
         if ($_FILES && $postVars['sabreAction'] === 'put' && current($_FILES) === false) {
-            $file = reset($_FILES);
+            $file            = reset($_FILES);
             list(, $newName) = URLUtil::splitPath(trim($file['name']));
 
             if (isset($postVars['name']) && trim($postVars['name'])) {

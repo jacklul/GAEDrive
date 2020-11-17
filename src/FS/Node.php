@@ -1,4 +1,4 @@
-<?php /** @noinspection PhpDeprecationInspection */
+<?php
 
 namespace GAEDrive\FS;
 
@@ -47,11 +47,11 @@ abstract class Node implements Sabre\DAV\INode
      */
     public function setName($name)
     {
-        list($parentPath,) = URLUtil::splitPath($this->path);
-        list(, $newName) = URLUtil::splitPath($name);
+        list($parentPath) = URLUtil::splitPath($this->path);
+        list(, $newName)  = URLUtil::splitPath($name);
 
         $newPath = $parentPath . '/' . $newName;
-        $result = rename($this->path, $newPath);
+        $result  = rename($this->path, $newPath);
         if (!$result) {
             throw new Sabre\DAV\Exception\ServiceUnavailable('Error while renaming node');
         }

@@ -12,7 +12,7 @@ use Sabre\DAVACL\ACLTrait;
 
 class HomeCollection extends AbstractPrincipalCollection implements Sabre\DAVACL\IACL, Sabre\DAV\IProperties
 {
-    use AclTrait;
+    use ACLTrait;
     use ProtectedPropertiesTrait;
 
     /**
@@ -43,8 +43,8 @@ class HomeCollection extends AbstractPrincipalCollection implements Sabre\DAVACL
      */
     public function __construct($path, AbstractBackend $principalBackend, $name = 'home', $principalPrefix = 'principals')
     {
-        $this->path = $path;
-        $this->name = $name;
+        $this->path                = $path;
+        $this->name                = $name;
         $this->principalPrefixBase = $principalPrefix;
 
         parent::__construct($principalBackend, $principalPrefix . '/users');
@@ -65,7 +65,8 @@ class HomeCollection extends AbstractPrincipalCollection implements Sabre\DAVACL
      */
     public function getACL()
     {
-        if (empty($this->getChildren())) {  // Hides this collection when user does not have home directory
+        if (empty($this->getChildren())) {
+            // Hides this collection when user does not have home directory
             return [];
         }
 
@@ -107,7 +108,7 @@ class HomeCollection extends AbstractPrincipalCollection implements Sabre\DAVACL
      */
     public function getChildForPrincipal(array $principalInfo)
     {
-        $principalUri = $principalInfo['uri'];
+        $principalUri      = $principalInfo['uri'];
         $principalBaseName = basename($principalInfo['uri']);
 
         $principalDataPath = $this->path . '/' . $principalBaseName;

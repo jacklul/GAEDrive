@@ -36,8 +36,8 @@ class DatastoreBasic extends AbstractBasic
      */
     public function __construct(DatastoreClient $datastore, Memcache $memcache, $principalPrefix = 'principals')
     {
-        $this->datastore = $datastore;
-        $this->memcache = $memcache;
+        $this->datastore       = $datastore;
+        $this->memcache        = $memcache;
         $this->principalPrefix = $principalPrefix . '/users/';
     }
 
@@ -50,14 +50,14 @@ class DatastoreBasic extends AbstractBasic
      */
     public function createUser($username, $display_name = null)
     {
-        $user_key = $this->datastore->key('User', (string)$username, ['identifierType' => Key::TYPE_NAME]);
+        $user_key    = $this->datastore->key('User', (string) $username, ['identifierType' => Key::TYPE_NAME]);
         $user_entity = $this->datastore->lookup($user_key);
 
         if ($user_entity === null) {
-            $user_entity = $this->datastore->entity($user_key);
-            $user_entity['password_hash'] = null;
+            $user_entity                                           = $this->datastore->entity($user_key);
+            $user_entity['password_hash']                          = null;
             $display_name !== null && $user_entity['display_name'] = $display_name;
-            $result = $this->datastore->insert($user_entity);
+            $result                                                = $this->datastore->insert($user_entity);
         } else {
             throw new Sabre\DAV\Exception\MethodNotAllowed('The resource you tried to create already exists');
         }
@@ -80,7 +80,7 @@ class DatastoreBasic extends AbstractBasic
      */
     public function updateUser($username, $data)
     {
-        $user_key = $this->datastore->key('User', (string)$username, ['identifierType' => Key::TYPE_NAME]);
+        $user_key    = $this->datastore->key('User', (string) $username, ['identifierType' => Key::TYPE_NAME]);
         $user_entity = $this->datastore->lookup($user_key);
 
         if ($user_entity !== null) {
@@ -109,7 +109,7 @@ class DatastoreBasic extends AbstractBasic
      */
     protected function validateUserPass($username, $password)
     {
-        $hash = md5($password);
+        $hash  = md5($password);
         $users = $this->getUsers();
 
         return isset($users[$username]) && $users[$username]['password_hash'] !== null && $users[$username]['password_hash'] === $hash;
@@ -124,7 +124,7 @@ class DatastoreBasic extends AbstractBasic
             return $this->cache['users'];
         }
 
-        $users = $this->memcache !== null ? $this->memcache->get('auth_users') : null;
+        $users = $this->memcache->get('auth_users');
         if (!$users) {
             $query = $this->datastore->query()
                 ->kind('User');
@@ -135,15 +135,17 @@ class DatastoreBasic extends AbstractBasic
                 /** @var Entity $entity */
                 foreach ($result as $entity) {
                     $entity_data = $entity->get();
-                    /** @noinspection NullPointerExceptionInspection */
-                    $username = strtolower($entity->key()->pathEndIdentifier());
 
-                    foreach ($entity_data as $key => $value) {
-                        $users[$username][$key] = $value;
+                    if ($entity->key() !== null) {
+                        $username = strtolower($entity->key()->pathEndIdentifier());
+
+                        foreach ($entity_data as $key => $value) {
+                            $users[$username][$key] = $value;
+                        }
                     }
                 }
 
-                $this->memcache !== null && $this->memcache->set('auth_users', $users, 0, 300);
+                $this->memcache->set('auth_users', $users, 0, 300);
             }
         }
 

@@ -8,7 +8,7 @@ use Sabre\DAVACL\ACLTrait;
 
 class VirtualFile extends Sabre\DAV\SimpleFile implements Sabre\DAVACL\IACL, Sabre\DAV\IProperties
 {
-    use AclTrait;
+    use ACLTrait;
     use ReadOnlyPropertiesTrait;
 
     /**

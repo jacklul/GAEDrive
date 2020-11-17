@@ -2,15 +2,12 @@
 
 [SabreDAV](http://sabre.io/) on [Google's App Engine](https://cloud.google.com/appengine/).
 
-_Something I did once for fun and because I was bored..._
-
 ## Install
 
 - Clone this repository
 - Rename `app.yaml.example` to `app.yaml`
 - Add new "User" entity to [Datastore](https://cloud.google.com/datastore/) (see below for entity fields)
 - Create new [GCP](https://console.cloud.google.com) project and deploy: `gcloud app deploy --project YOUR-PROJECT-NAME --version v1 app.yaml -q`
-- (Optional) Deploy scheduled tasks: `gcloud app deploy --project YOUR-PROJECT-NAME cron.yaml -q` (quota calculations towards 5GB free tier limit)
 - Visit `https://YOUR-PROJECT-NAME.appspot.com` to check if everything works
 
 ### "User" entity fields
@@ -37,6 +34,7 @@ _Something I did once for fun and because I was bored..._
 - You're heavily limited by [Cloud Storage](https://cloud.google.com/storage/) operations limits in free tier
 - When you add/remove/edit user you might have to clean Memcache to make the changes take effect immediately
 - Passwords are basically md5 hashes - feel free to upgrade this
+- Max size of a single file is 32MB (limited by max allowed HTTP request size)
 
 ## License
 

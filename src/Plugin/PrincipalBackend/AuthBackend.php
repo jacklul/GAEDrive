@@ -4,10 +4,10 @@ namespace GAEDrive\Plugin\PrincipalBackend;
 
 use GAEDrive\Plugin\AuthPlugin;
 use Sabre;
+use Sabre\DAVACL\PrincipalBackend\CreatePrincipalSupport;
 use Sabre\DAV\Exception;
 use Sabre\DAV\MkCol;
 use Sabre\DAV\PropPatch;
-use Sabre\DAVACL\PrincipalBackend\CreatePrincipalSupport;
 
 class AuthBackend extends AbstractBackend implements CreatePrincipalSupport
 {
@@ -44,7 +44,7 @@ class AuthBackend extends AbstractBackend implements CreatePrincipalSupport
      */
     public function __construct(AuthPlugin $authPlugin, $principalPrefix = 'principals')
     {
-        $this->authPlugin = $authPlugin;
+        $this->authPlugin      = $authPlugin;
         $this->principalPrefix = $principalPrefix;
 
         $this->defaultPrincipals = [
@@ -243,7 +243,8 @@ class AuthBackend extends AbstractBackend implements CreatePrincipalSupport
     {
         $display_name = null;
         foreach ($mkCol->getMutations() as $mutation => $value) {
-            if ($mutation === '{DAV:}displayname' && !empty($value)) {  // Allow only display name to be passed when creating new principal
+            if ($mutation === '{DAV:}displayname' && !empty($value)) {
+                // Allow only display name to be passed when creating new principal
                 $display_name = $value;
             }
         }

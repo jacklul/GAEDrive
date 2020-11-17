@@ -6,6 +6,7 @@ use ErrorException;
 use GAEDrive\Helper\Memcache as MemcacheHelper;
 use Google\Auth\HttpHandler\Guzzle6HttpHandler;
 use Google\Cloud\Datastore\DatastoreClient;
+use Google\Cloud\Storage\StorageClient;
 use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\Handler\StreamHandler as GuzzleStreamHandler;
 use Memcache;
@@ -25,8 +26,6 @@ use Sabre\DAV\Server as DAVServer;
  */
 class Server
 {
-    const MAX_QUOTA = 5000000000; // ~5GB = default storage bucket space for always free tier
-
     /**
      * @var string
      */
@@ -47,7 +46,7 @@ class Server
             $this->path = 'gs://#default#';
         } else {
             while (substr($this->path, -1) === '/') {
-                $this->path = substr($this->path, 0, -1);   // Remove ending slash
+                $this->path = substr($this->path, 0, -1); // Remove ending slash
             }
         }
 
@@ -79,22 +78,22 @@ class Server
          * @return DAVServer
          */
         $this->container['server'] = function () {
-            $plugins = [];
+            $plugins   = [];
             $plugins[] = new Plugin\BrowserPlugin(true);
             $plugins[] = new Plugin\QuotaCheckPlugin();
             $plugins[] = new Plugin\IgnoreTemporaryFilesPlugin();
 
             $authBackend = new Plugin\AuthBackend\DatastoreBasic($this->datastore, $this->memcache);
-            $plugins[] = $authPlugin = new Plugin\AuthPlugin($authBackend);
+            $plugins[]   = $authPlugin   = new Plugin\AuthPlugin($authBackend);
 
             $principalBackend = new Plugin\PrincipalBackend\AuthBackend($authPlugin);
-            $plugins[] = new Plugin\PrincipalPlugin($principalBackend);
+            $plugins[]        = new Plugin\PrincipalPlugin($principalBackend);
 
             $locksBackend = new Plugin\LocksBackend\Memcache($this->memcache);
-            $plugins[] = new Plugin\LocksPlugin($locksBackend);
+            $plugins[]    = new Plugin\LocksPlugin($locksBackend);
 
             $propertyStorageBackend = new Plugin\PropertyStorageBackend\Memcache($this->memcache, $this->path);
-            $plugins[] = new Plugin\PropertyStoragePlugin($propertyStorageBackend);
+            $plugins[]              = new Plugin\PropertyStoragePlugin($propertyStorageBackend);
 
             $rootCollection = [
                 new FS\Collection\RootPrincipalCollection($principalBackend),
@@ -103,7 +102,7 @@ class Server
                 new FS\Collection\PublicColletion($this->path . '/public'),
             ];
 
-            $server = new Sabre\DAV\Server(new FS\Collection\RootCollection($rootCollection, $authPlugin, false));
+            $server                          = new Sabre\DAV\Server(new FS\Collection\RootCollection($rootCollection, $authPlugin, false));
             Sabre\DAV\Server::$exposeVersion = false;
             $server->setLogger($this->logger);
             $server->setBaseUri('/');
@@ -115,7 +114,6 @@ class Server
 
             return $server;
         };
-
 
         /**
          * @return Logger
@@ -134,13 +132,8 @@ class Server
          * @return DatastoreClient
          */
         $this->container['datastore'] = static function () {
-            $options = [];
-            if (isset($_SERVER['DEFAULT_VERSION_HOSTNAME']) && empty(getenv('GOOGLE_CLOUD_PROJECT'))) {
-                $options['projectId'] = explode('.', $_SERVER['DEFAULT_VERSION_HOSTNAME'])[0];
-            }
-
             // On GAE we don't have fully functional cURL so it's best to use stream handler
-            $options['httpHandler'] = new Guzzle6HttpHandler(
+            $guzzleHandler = new Guzzle6HttpHandler(
                 new GuzzleClient(
                     [
                         'handler' => new GuzzleStreamHandler(),
@@ -148,7 +141,19 @@ class Server
                     ]
                 )
             );
-            $options['authHttpHandler'] = $options['httpHandler'];
+
+            // Options for Cloud libraries
+            $options = [
+                'httpHandler'     => $guzzleHandler,
+                'authHttpHandler' => $guzzleHandler,
+            ];
+
+            // Extract project name from environment variables
+            if (isset($_SERVER['DEFAULT_VERSION_HOSTNAME']) && empty(getenv('GOOGLE_CLOUD_PROJECT'))) {
+                $options['projectId'] = explode('.', $_SERVER['DEFAULT_VERSION_HOSTNAME'])[0];
+            } else {
+                $options['projectId'] = getenv('GOOGLE_CLOUD_PROJECT');
+            }
 
             return new DatastoreClient($options);
         };
@@ -173,13 +178,10 @@ class Server
             throw new RuntimeException('Server is not initialized');
         }
 
-        $this->server->start();
+        $this->server->exec();
     }
 
-
     /**
-     * @noinspection MagicMethodsValidityInspection
-     *
      * @param string $key
      *
      * @return mixed|null

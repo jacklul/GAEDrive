@@ -7,7 +7,7 @@ use Sabre\DAVACL\ACLTrait;
 
 class ACLDirectory extends Directory implements Sabre\DAVACL\IACL
 {
-    use AclTrait;
+    use ACLTrait;
 
     /**
      * @var string
@@ -27,7 +27,7 @@ class ACLDirectory extends Directory implements Sabre\DAVACL\IACL
     public function __construct($path, $owner, $acl = null)
     {
         $this->owner = $owner;
-        $this->acl = $acl;
+        $this->acl   = $acl;
 
         parent::__construct($path);
     }

@@ -28,7 +28,7 @@ class RootCollection extends Sabre\DAV\SimpleCollection implements Sabre\DAVACL\
      */
     public function __construct(array $children, AuthPlugin $authPlugin, $public = false)
     {
-        $this->public = $public;
+        $this->public     = $public;
         $this->authPlugin = $authPlugin;
 
         parent::__construct('root', $children);

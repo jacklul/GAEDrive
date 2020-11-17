@@ -1,11 +1,10 @@
-<?php /** @noinspection PhpDeprecationInspection */
+<?php
 
 namespace GAEDrive\FS;
 
 use FilesystemIterator;
 use GAEDrive\FS\File\VirtualFile;
 use GAEDrive\Helper\Memcache;
-use GAEDrive\Server;
 use Sabre;
 use Sabre\DAV\INode;
 use Sabre\HTTP\URLUtil;
@@ -36,11 +35,11 @@ class Directory extends Node implements Sabre\DAV\ICollection, Sabre\DAV\IQuota
             throw new Sabre\DAV\Exception\ServiceUnavailable('Renaming of non-empty collection is not supported');
         }
 
-        list($parentPath,) = URLUtil::splitPath($this->path);
-        list(, $newName) = URLUtil::splitPath($name);
+        list($parentPath) = URLUtil::splitPath($this->path);
+        list(, $newName)  = URLUtil::splitPath($name);
 
         $newPath = $parentPath . '/' . $newName;
-        $result = rename($this->path . '/', $newPath . '/');
+        $result  = rename($this->path . '/', $newPath . '/');
         if (!$result) {
             throw new Sabre\DAV\Exception\ServiceUnavailable('Error while renaming node');
         }
@@ -67,7 +66,7 @@ class Directory extends Node implements Sabre\DAV\ICollection, Sabre\DAV\IQuota
         }
 
         $newPath = $this->path . '/' . $name;
-        $result = file_put_contents($newPath, $data);
+        $result  = file_put_contents($newPath, $data);
         if ($result === false) {
             throw new Sabre\DAV\Exception\ServiceUnavailable('Error while writing data');
         }
@@ -91,7 +90,7 @@ class Directory extends Node implements Sabre\DAV\ICollection, Sabre\DAV\IQuota
         }
 
         $newPath = $this->path . '/' . $name;
-        $result = mkdir($newPath);
+        $result  = mkdir($newPath);
         if ($result === false) {
             throw new Sabre\DAV\Exception\ServiceUnavailable('Error while creating directory');
         }
@@ -153,7 +152,7 @@ class Directory extends Node implements Sabre\DAV\ICollection, Sabre\DAV\IQuota
         return new FilesystemIterator(
             $this->path,
             FilesystemIterator::CURRENT_AS_SELF
-            | FilesystemIterator::SKIP_DOTS
+             | FilesystemIterator::SKIP_DOTS
         );
     }
 
@@ -164,16 +163,16 @@ class Directory extends Node implements Sabre\DAV\ICollection, Sabre\DAV\IQuota
      */
     public function getChildren()
     {
-        $nodes = [];
+        $nodes    = [];
         $iterator = $this->getDirectoryIterator();
+        $counter  = 0;
 
         $children_count = iterator_count($iterator);
         if ($children_count > self::MAX_ENTRIES) {
             $this->paginated = true;
 
-            syslog(LOG_INFO, 'Directory contains more than ' . self::MAX_ENTRIES . ' entries!');
+            syslog(LOG_INFO, 'Directory contains more than ' . self::MAX_ENTRIES . ' entries, only the first page is returned!');
 
-            $counter = 0;
             $start = 0;
             if (isset($_GET['page']) && is_numeric($_GET['page']) && $_GET['page'] > 0) {
                 $start = (self::MAX_ENTRIES * ($_GET['page'] - 1)) + 1;
@@ -183,7 +182,7 @@ class Directory extends Node implements Sabre\DAV\ICollection, Sabre\DAV\IQuota
                 }
             }
 
-            $this->pages = round($children_count/self::MAX_ENTRIES);
+            $this->pages = round($children_count / self::MAX_ENTRIES);
         }
 
         if ($this->paginated && !in_array($_SERVER['REQUEST_METHOD'], ['GET', 'POST'])) {
@@ -193,10 +192,8 @@ class Directory extends Node implements Sabre\DAV\ICollection, Sabre\DAV\IQuota
 
         foreach ($iterator as $entry) {
             if ($this->paginated) {
-                /** @noinspection PhpUndefinedVariableInspection */
                 $counter++;
 
-                /** @noinspection PhpUndefinedVariableInspection */
                 if ($counter >= $start) {
                     $nodes[] = $this->getChild($entry->getFilename());
                 } else {
@@ -245,7 +242,7 @@ class Directory extends Node implements Sabre\DAV\ICollection, Sabre\DAV\IQuota
      */
     public function getQuotaInfo()
     {
-        return [0, Server::MAX_QUOTA];
+        return [];
     }
 
     /**

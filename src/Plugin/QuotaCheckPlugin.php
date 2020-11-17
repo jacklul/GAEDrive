@@ -1,15 +1,20 @@
-<?php /** @noinspection PhpUnusedParameterInspection */
+<?php
 
 namespace GAEDrive\Plugin;
 
 use Sabre;
 use Sabre\DAV\INode;
+use Sabre\DAV\IQuota;
 use Sabre\DAV\Node;
+use Sabre\DAV\PropFind;
 use Sabre\DAV\Server as DAVServer;
 use Sabre\DAV\ServerPlugin;
 
 class QuotaCheckPlugin extends ServerPlugin
 {
+    const MAX_QUOTA     = 5368706371; // ~5 GB
+    const MAX_FILE_SIZE = 33554432; // 32 MB
+
     /**
      * @var DAVServer
      */
@@ -26,6 +31,7 @@ class QuotaCheckPlugin extends ServerPlugin
 
         $server->on('beforeWriteContent', [$this, 'handleBeforeWriteContent'], 10);
         $server->on('beforeCreateFile', [$this, 'handleBeforeCreateFile'], 10);
+        $server->on('propFind', [$this, 'propFind'], 100);
     }
 
     /**
@@ -79,8 +85,8 @@ class QuotaCheckPlugin extends ServerPlugin
             $length = $this->getLength();
         }
 
-        if ($length && $length > 32000000) {
-            throw new Sabre\DAV\Exception\InsufficientStorage('Max file size exceeded');
+        if ($length && $length > self::MAX_FILE_SIZE) {
+            throw new Sabre\DAV\Exception\InsufficientStorage('Max file size exceeded (over ' . self::MAX_FILE_SIZE . ' bytes)');
         }
 
         return true;
@@ -123,5 +129,21 @@ class QuotaCheckPlugin extends ServerPlugin
         }
 
         return $this->checkQuota($uri);
+    }
+
+    /**
+     * @param PropFind $propFind
+     * @param INode    $node
+     *
+     * @return void
+     */
+    public function propFind(PropFind $propFind, INode $node)
+    {
+        if ($node instanceof IQuota) {
+            $propFind->set('{DAV:}quota-available-bytes', null);
+            $propFind->set('{DAV:}quota-used-bytes', null);
+            $propFind->set('{DAV:}storage-max-quota', self::MAX_QUOTA);
+            $propFind->set('{DAV:}file-max-size', self::MAX_FILE_SIZE);
+        }
     }
 }
